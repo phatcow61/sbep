@@ -1,4 +1,5 @@
 TOOL.Category		= "SBEP"
+TOOL.Tab 			= "Spacebuild"
 TOOL.Name			= "#Docking Clamp"
 TOOL.Command		= nil
 TOOL.ConfigName 	= ""
@@ -23,6 +24,24 @@ CategoryTable[1] = {
 
 TOOL.ClientConVar[ "model" 		] = "models/smallbridge/panels/sbpaneldockin.mdl"
 TOOL.ClientConVar[ "allowuse"   ] = 1
+
+if ( SERVER ) then
+
+	function MakeDockingClamp( Player, Data )
+
+		local DockEnt = ents.Create( "sbep_base_docking_clamp" )
+		duplicator.DoGeneric( DockEnt, Data )
+		DockEnt:Spawn()
+
+		duplicator.DoGenericPhysics( DockEnt, Player, Data )
+
+		return DockEnt
+
+	end
+
+	duplicator.RegisterEntityClass( "sbep_base_docking_clamp", MakeDockingClamp, "Data" )
+	
+end
 
 function TOOL:LeftClick( tr )
 
@@ -53,6 +72,11 @@ function TOOL:LeftClick( tr )
 	
 	undo.Create("SBEP Docking Clamp")
 		undo.AddEntity( DockEnt )
+		if DockEnt.Doors then
+			for _,door in ipairs( DockEnt.Doors ) do
+				undo.AddEntity( door )
+			end
+		end
 		undo.SetPlayer( ply )
 	undo.Finish()
 
@@ -95,7 +119,7 @@ function TOOL:RightClick( tr )
 				end
 				
 				DockEnt:SetPos( Vector(0,-50,100) + pos - Vector(0,0,DockEnt:OBBMins().z) )
-				DockEnt:SetAngles( ang + Angle( 0, data.Compatible[ check ].AYaw , 0 ) )
+				DockEnt:SetAngles( ang + Angle( 0, data.Compatible[ check ].AYaw or 0, 0 ) )
 				
 				DockEnt:AddDockDoor()
 				
@@ -104,6 +128,11 @@ function TOOL:RightClick( tr )
 				
 				undo.Create("SBEP Docking Clamp")
 					undo.AddEntity( DockEnt )
+					if DockEnt.Doors then
+						for _,door in ipairs( DockEnt.Doors ) do
+							undo.AddEntity( door )
+						end
+					end
 					undo.SetPlayer( self:GetOwner() )
 				undo.Finish()
 				
@@ -126,6 +155,7 @@ function TOOL.BuildCPanel( panel )
 	local UseCheckBox = vgui.Create( "DCheckBoxLabel", panel )
 	UseCheckBox:Dock(TOP)
 	UseCheckBox:SetText( "Enable Use Key:" )
+	UseCheckBox:SetTextColor(Color(0,0,0,255))
 	UseCheckBox:SetConVar( "sbep_docking_clamp_allowuse" )
 	UseCheckBox:SetValue( GetConVar( "sbep_docking_clamp_allowuse" ):GetBool()  )
 

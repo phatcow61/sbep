@@ -1,4 +1,6 @@
 TOOL.Category		= "SBEP"
+TOOL.Tab 			= "Spacebuild"
+TOOL.Tab 			= "Spacebuild"
 TOOL.Name			= "#Door"
 TOOL.Command		= nil
 TOOL.ConfigName 	= ""
@@ -27,13 +29,31 @@ CategoryTable[1] = {
 					}
 
 CategoryTable[2] = {
-	{ name = "ModBridge Doors"	, cat = "Modbridge" , model = "models/Cerus/Modbridge/Misc/Doors/door11a.mdl" 	 }
+	{ name = "ModBridge Doors"	, cat = "Modbridge" , model = "models/cerus/modbridge/misc/doors/door11a.mdl" 	 }
 					}
 
 TOOL.ClientConVar[ "skin"  		] = 0
-TOOL.ClientConVar[ "model"  	] = "models/SmallBridge/Panels/sbpaneldoor.mdl"
+TOOL.ClientConVar[ "model"  	] = "models/smallbridge/panels/sbpaneldoor.mdl"
 TOOL.ClientConVar[ "wire"  		] = 1
 TOOL.ClientConVar[ "enableuse"	] = 1
+
+if ( SERVER ) then
+
+	function MakeDoorController( Player, Data )
+
+		local DoorController = ents.Create( "sbep_base_door_controller" )
+		duplicator.DoGeneric( DoorController, Data )
+		DoorController:Spawn()
+
+		duplicator.DoGenericPhysics( DoorController, Player, Data )
+
+		return DoorController
+
+	end
+
+	duplicator.RegisterEntityClass( "sbep_base_door_controller", MakeDoorController, "Data" )
+	
+end
 
 function TOOL:LeftClick( tr )
 
@@ -69,6 +89,11 @@ function TOOL:LeftClick( tr )
 
 	undo.Create("SBEP Door")
 		undo.AddEntity( DoorController )
+		if DoorController.DT then
+			for _,door in ipairs( DoorController.DT ) do
+				undo.AddEntity( door )
+			end
+		end
 		undo.SetPlayer( ply )
 	undo.Finish()
 	
@@ -101,12 +126,14 @@ function TOOL.BuildCPanel( panel )
 	local WireCheckBox = vgui.Create( "DCheckBoxLabel", panel )
 	WireCheckBox:Dock(TOP)
 	WireCheckBox:SetText( "Create Wire Inputs:" )
+	WireCheckBox:SetTextColor(Color(0,0,0,255))
 	WireCheckBox:SetConVar( "sbep_door_wire" )
 	WireCheckBox:SetValue( GetConVar( "sbep_door_wire" ):GetBool() )
 		
 	local UseCheckBox = vgui.Create( "DCheckBoxLabel", panel )
 	UseCheckBox:Dock(TOP)
 	UseCheckBox:SetText( "Enable Use Key:" )
+	UseCheckBox:SetTextColor(Color(0,0,0,255))
 	UseCheckBox:SetConVar( "sbep_door_enableuse" )
 	UseCheckBox:SetValue( GetConVar( "sbep_door_enableuse" ):GetBool()  )
 	
